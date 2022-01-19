@@ -1,1 +1,79 @@
-#testing
+#Using R for Graphical Representations
+
+# R Packages
+install.packages("readr")
+library(readr)
+
+# Read data into R
+# Select the file that you park
+education <- read.csv(file.choose()) # load csv file into R
+
+View(education)
+
+#Measures of Central Tendency / First moment business decision
+
+mean(education$workex) # '$' is used to refer to the variables within object or you can use attach ()
+attach(education) # When used we can directly refer to the variable name
+mean(gmat)
+
+median(gmat)# Median
+
+# Mode
+x <- c(19, 4, 5, 7, 29, 19, 29, 13, 25, 19)
+Mode <- function(x){
+     a = table(x)        # x is a vector
+     return(a[which.max(a)])
+}
+Mode(x)
+
+# Measures of Dispersion / Second moment business decision
+var(gmat) # variance
+sd(gmat)  # standard deviation
+range <- max(gmat) - min(gmat) # range
+range
+
+# Third moment business decision
+install.packages("moments")
+library(moments)
+skewness(gmat)
+
+# Fourth moment business decision
+kurtosis(gmat)
+
+# Graphical Representation
+barplot(gmat)
+
+dotchart(gmat)
+
+hist(gmat) # histogram
+
+boxplot(gmat) # boxplot
+y <- boxplot(gmat)
+
+y$out # to check any outliers
+
+# Probability Distribution
+install.packages("UsingR")
+library("UsingR")
+densityplot(gmat)
+
+# Normal Quantile-Quantile Plot
+qqnorm(gmat)
+qqline(gmat)
+
+qqnorm(workex)
+qqline(workex)
+
+# Transformation to make workex variable normal
+qqnorm(log(workex))
+qqline(log(workex))
+
+# z-distribution
+pnorm(680,711,29) # given a value, find the probability
+qnorm(0.975)      # given probability, find the Z value
+
+# t-distribution
+pt(1.98, 139)  # given a value, find the probability
+qt(0.975, 139) # given probability, find the t value
+
+
