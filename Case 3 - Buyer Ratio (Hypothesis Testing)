@@ -1,0 +1,22 @@
+Sales of products in four different regions is tabulated for males and females. Find if male-female buyer rations are similar across regions.
+
+# Hypothesis Testing
+library(readxl)
+library(readr)
+
+Buyer_Ratio<-read.csv(file.choose())
+attach(Buyer_Ratio)
+View(Buyer_Ratio)
+
+table(East)
+table(West)
+table(North)
+table(South)
+
+
+chisq.test(table(East)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(West)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(North)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(South)) #p-value < 0.05 (Accept alternate hypothesis)
+
+#p-value > 0.05 (Accept null hypothesis)
