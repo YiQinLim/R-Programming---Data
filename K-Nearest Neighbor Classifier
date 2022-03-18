@@ -1,0 +1,56 @@
+### KNN Classifier for Animals ###
+# Load the animal dataset
+animal <- read.csv(file.choose())
+
+# drop the animal name
+animal <- animal[,-1]
+
+# table of diagnosis
+table(animal$type) #give us the count
+str(animal$type) #structure of the type
+
+#recode type as a factor
+animal$type <- factor(animal$type, levels = c("1", "2","3","4","5","6","7"), labels = c("Type_A", "Type_B","Type_C","Type_D","Type_E","Type_F","Type_G"))
+
+# table or proportions with more informative labels
+round(prop.table(table(animal$type)) * 100, digits = 2)
+#Type_A = 40.59%, Type_B = 19.80%, Type_C = 4.95%, Type_D=12.87%, Type_E=3.96%, Type_F=7.92%,Type_G=9.90%
+
+summary(animal)
+
+# create normalization function #make the data have equal impacts, as each parameter has different units/matrix, so we normalize the data
+normalize <- function(x) { #create a user defined function for normalization, so every time you call out normalize, it will perform x-min(x)/max(x)-min(x)
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+animal_n <- as.data.frame(lapply(animal[1:16], normalize))
+
+summary(animal_n)
+
+# create training and test data
+animal_train <- animal_n[1:71, ]
+animal_test <- animal_n[72:101, ]
+
+# create labels for training and test data #separate the data into output column - type as output column
+animal_train_labels <- animal[1:71, 17]
+animal_test_labels <- animal[72:101, 17]
+
+#---- Training a model on the data ----
+# load the "class" library #in this package, knn exists
+install.packages("class")
+library(class)
+
+animal_test_pred <- knn(train = animal_train, test = animal_test, cl = animal_train_labels, k = 21) #output variable c1, take k value = 21
+
+##--------Evaluating model performance ----#Confusion Test
+confusion_test <- table(x = animal_test_labels, y = animal_test_pred) #build the confusion matrix, we will know how many true predictions and false predictions are there
+confusion_test
+Accuracy <- sum(diag(confusion_test))/sum(confusion_test)
+Accuracy 
+
+# Training Accuracy to compare against test accuracy #Confusion Train
+animal_train_pred <- knn(train = animal_train, test = animal_train, cl = animal_train_labels, k=21)
+
+confusion_train <- table(x = animal_train_labels, y = animal_train_pred)
+Accuracy_train <- sum(diag(confusion_train))/sum(confusion_train)
+Accuracy_train
