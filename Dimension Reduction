@@ -1,0 +1,23 @@
+Perform Dimension Reduction for Wine Dataset
+
+wine <- read.csv(file.choose())
+
+?princomp #info about Principal Components Analysis
+pcaObj <- princomp(wine, cor = TRUE, scores = TRUE, covmat = NULL) #calculate correlation, scores, and covariance matrix
+
+str(pcaObj)
+summary(pcaObj)
+
+loadings(pcaObj)#show the complete details for 14 Comp
+
+plot(pcaObj) # graph showing importance of principal components 
+
+biplot(pcaObj)
+
+plot(cumsum(pcaObj$sdev * pcaObj$sdev) * 100 / (sum(pcaObj$sdev * pcaObj$sdev)), type = "b") #plot cumulative percentages
+
+# All the PCA scores
+pcaObj$scores
+
+#We can remove the last column (PC 14) as it has the least variance
+#In PCA, we always drop the last column (least variance column)
