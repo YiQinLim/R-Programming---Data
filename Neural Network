@@ -1,0 +1,64 @@
+Build a Neural Network model for 50_startups data to predict profit 
+
+#Load the data set
+startup <- read.csv(file.choose())
+attach(startup)
+
+# custom normalization function
+normalize <- function(x) { 
+  return((x - min(x)) / (max(x) - min(x)))
+}
+
+#Re-label the state
+library(plyr) #for "revalue"
+startup$State <- as.numeric(revalue(startup$State,
+                                    c("New York"="0", "California"="1",
+                                      "Florida"="2")))
+
+# Apply normalization function to entire data
+startup_norm <- as.data.frame(lapply(startup, normalize))
+
+# Exploratory data Analysis :
+plot(R.D.Spend, Profit)
+plot(Administration, Profit)
+plot(Marketing.Spend, Profit)
+plot(State, Profit)
+pairs(startup)
+
+# create training and test data
+startup_train <- startup_norm[1:35, ]
+startup_test <- startup_norm[36:50, ]
+
+# Train the neuralnet model
+install.packages("neuralnet") #for neural network
+library(neuralnet)
+
+# ANN with only a single hidden neuron
+startup_model <- neuralnet(Profit ~ R.D.Spend+Administration+Marketing.Spend+State
+                           , data = startup_train)
+
+# visualize the network topology
+plot(startup_model)
+
+## Evaluating model performance
+model_results <- compute(startup_model, startup_test[1:4])
+
+# Obtain predicted strength values
+predicted_strength <- model_results$net.result
+
+# Examine the correlation between predicted and actual values
+cor(predicted_strength, startup_test$Profit)
+
+## Improving model performance
+# A more complex neural network topology with 5 hidden neurons
+
+startup_model2 <- neuralnet(Profit ~ R.D.Spend+Administration+Marketing.Spend+State
+                            , data = startup_train, hidden = 5)
+
+# plot the network
+plot(startup_model2)
+
+# Evaluate the results
+startup_model2 <- compute(startup_model2, startup_test[1:4])
+predicted_strength2 <- startup_model2$net.result
+cor(predicted_strength2, startup_test$Profit)
