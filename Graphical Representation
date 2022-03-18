@@ -1,0 +1,69 @@
+# R Packages
+install.packages("readr")
+library(readr)
+
+# Read data into R
+education <- read.csv(file.choose()) # load csv file into R
+
+View(education)
+
+#Exploratory Data Analysis
+#Measures of Central Tendency / First moment business decision
+
+mean(education$SP) # '$' is used to refer to the variables within object
+
+attach(education) # When used we can directly refer to the variable name
+mean(WT)
+
+rm(education) # Remove specific object to free RAM (memory)
+rm(list=ls()) # Remove all to free RAM (memory)
+
+median(SP)# Median
+median(WT)
+
+# Measures of Dispersion / Second moment business decision
+var(SP) # variance
+sd(SP)  # standard deviation
+range <- max(SP) - min(SP) # range
+range
+# Third moment business decision
+install.packages("moments")
+library(moments)
+skewness(SP)
+skewness(WT)
+
+# Fourth moment business decision
+kurtosis(SP)
+skewness(WT)
+
+# Graphical Representation
+barplot(SP)
+barplot(WT)
+
+dotchart(SP)
+dotchart(WT)
+
+hist(SP) # histogram
+hist(WT)
+
+boxplot(SP) # boxplot
+y <- boxplot(SP)
+
+y$out # to see outliers
+
+# Probability Distribution
+install.packages("UsingR")
+library("UsingR")
+densityplot(SP)
+densityplot(WT)
+
+# Normal Quantile-Quantile Plot
+qqnorm(SP)
+qqline(SP)
+
+qqnorm(WT)
+qqline(WT)
+
+# Transformation to make TopSpeed variable normal
+qqnorm(log(SP))
+qqline(log(SP))
