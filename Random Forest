@@ -1,0 +1,49 @@
+###Random Forest for Diabetes patients###
+# Read the dataset
+diabetes <- read.csv(file.choose())
+
+#Rename column
+names(diabetes)[1] <- 'pregnant_times'
+names(diabetes)[2] <- 'plasma_glucose'
+names(diabetes)[3] <- 'blood_pressure'
+names(diabetes)[4] <- 'tricep_skin_fold'
+names(diabetes)[5] <- 'insulin'
+names(diabetes)[6] <- 'body_mass'
+names(diabetes)[7] <- 'diabetes_pedigree'
+names(diabetes)[8] <- 'age'
+
+table(diabetes$Class.variable)
+#500 No, and 268 Yes
+
+round(prop.table(table(diabetes$Class.variable))*100,1)
+
+#Create a function to normalize the data
+norm <- function(x){ 
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+#Apply the normalization function to diabetes dataset
+diabetes_n <- as.data.frame(lapply(diabetes[1:8], norm))
+
+# create training and test data
+diabetes_train <- diabetes_n[1:615, ]
+diabetes_test <- diabetes_n[616:768, ]
+
+# create labels for training and test data
+diabetes_train_labels <- diabetes[1:615, 9]
+diabetes_test_labels <- diabetes[616:768, 9]
+
+# Building a random forest model on training data 
+install.packages("randomForest")
+library(randomForest)
+
+diabetes_forest <- randomForest(diabetes_train_labels ~ .,data=diabetes_train,importance=TRUE)
+plot (diabetes_forest)
+
+# Test Data Accuracy
+test_acc <- mean(diabetes_test_labels == predict(diabetes_forest, newdata=diabetes_test ))
+test_acc
+
+# Train Data Accuracy
+train_acc <- mean(diabetes_train_labels == predict(diabetes_forest, data=diabetes_train))
+train_acc
