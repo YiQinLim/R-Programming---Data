@@ -1,0 +1,68 @@
+# Hypothesis Testing
+### Customer Order Form ###
+library(readxl)
+library(readr)
+
+Customer_OrderForm<-read.csv(file.choose())
+attach(Customer_OrderForm)
+View(Customer_OrderForm)
+
+table(Phillippines)
+table(Indonesia)
+table(Malta)
+table(India)
+
+
+chisq.test(table(Phillippines)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(Indonesia)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(Malta)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(India)) #p-value < 0.05 (Accept alternate hypothesis)
+
+#p-value < 0.05 (Accept alternate hypothesis)
+
+### Buyer Ratio ###
+# Hypothesis Testing
+library(readxl)
+library(readr)
+
+Buyer_Ratio<-read.csv(file.choose())
+attach(Buyer_Ratio)
+View(Buyer_Ratio)
+
+table(East)
+table(West)
+table(North)
+table(South)
+
+
+chisq.test(table(East)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(West)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(North)) #p-value < 0.05 (Accept alternate hypothesis)
+chisq.test(table(South)) #p-value < 0.05 (Accept alternate hypothesis)
+
+#p-value > 0.05 (Accept null hypothesis)
+
+### Cutlet ### 
+# Hypothesis Testing
+library(readxl)
+library(readr)
+
+Cutlets<-read.csv(file.choose())
+attach(Cutlets)
+View(Cutlets)
+
+# Normality test
+shapiro.test(Unit.A)
+#p-value = 0.32 > 0.05, It follows normal distribution
+
+shapiro.test(Unit.B)
+#p-value = 0.5225 > 0.05, It follows normal distribution
+
+#Variance test
+var.test(Unit.A,Unit.B)
+#p-value = 0.3136 > 0.05, equal variances
+
+#Equal Variances, then we need to proceed to 2 Sample T Test
+t.test(Unit.A, Unit.B, alternative = "two.sided", conf.level = 0.95) 
+#p-value = 0.4723 > 0.05, Null hypothesis is accepted
+
