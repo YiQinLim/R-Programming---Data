@@ -1,0 +1,26 @@
+Perform Clustering for the crime data and identify the number of clusters formed and draw inferences.
+
+crime_data <- read.csv(file.choose())
+
+# Normalize the data
+normalized_data <- scale(crime_data[, 2:5])
+
+# Elbow curve & k ~ sqrt(n/2) to decide the k value
+twss <- NULL
+for (i in 2:8) { #taking up to 8 clusters, starting from 2 clusters, 3 clusters, 4 clusters,.... 8 clusters
+  twss <- c(twss, kmeans(normalized_data, centers=i)$tot.withinss)
+}
+twss #distance within clusters
+
+# Look for an "elbow" in the scree plot
+plot(2:8, twss, type = "b", xlab = "Number of Clusters", ylab = "Within groups sum of squares") #y-axis = twss
+title(sub = "K-Means Clustering Scree-Plot")
+
+fit <- kmeans(normalized_data, 3) # 3 clusters (we can choose based on our preference. But based on elbow curve, 3 cluster seems like a good choice)
+
+str(fit)
+fit$cluster
+
+final <- data.frame(fit$cluster, crime_data) # form a dataframe 
+
+aggregate(crime_data[, 2:5], by=list(fit$cluster), FUN = mean) #mean value of each cluster
