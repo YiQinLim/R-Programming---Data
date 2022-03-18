@@ -1,0 +1,284 @@
+### Forecast the CocaCola prices and Airlines Passengers. ###
+### Prepare a document for each model explaining how many dummy variables you have created and RMSE value for each model. Finally which model you will use for Forecasting. ###
+
+# Load the Dataset
+
+### ### ### Airline Passengers ### ### ###
+
+library(readr)
+library(readxl)
+airlines <- read_excel(file.choose()) #read the airlines data set
+View(airlines) 
+
+windows()
+plot(airlines$Passengers, type="o")
+
+# Data Preparation
+airlines["t"] <- 1:96 #create a new column "t" to represent the month
+View(airlines) 
+
+airlines["t_square"] <- airlines["t"] * airlines["t"]
+airlines["log_ff"] <- log(airlines["Passengers"])
+attach(airlines)
+
+# creating 12 dummy variables
+X <- data.frame(outer(rep(month.abb, length = 96), month.abb,"==") + 0 )# Creating dummies for 12 months
+View(X)
+
+colnames(X) <- month.abb # Assigning month names 
+View(X)
+
+trakdata <- cbind(airlines, X)
+View(trakdata)
+attach(trakdata)
+colnames(trakdata)
+
+# Partition the time series
+train <- trakdata[1:68, ]
+test <- trakdata[69:96, ]
+
+########################### LINEAR MODEL (Linear Regression) #############################
+linear_model <- lm(Passengers ~ t, data=train)
+summary(linear_model)
+
+linear_pred <- data.frame(predict(linear_model,interval='predict', newdata =test)) #predict the future values by giving test data
+View(linear_pred)
+
+rmse_linear <- sqrt(mean((test$Passengers - linear_pred$fit)^2, na.rm = T))
+rmse_linear # 46.29
+
+######################### Exponential #################################
+
+expo_model <- lm(log_ff ~ t, data=train)
+summary(expo_model)
+
+expo_pred <- data.frame(predict(expo_model, interval='predict', newdata=test))
+View(expo_pred)
+
+rmse_expo<-sqrt(mean((test$Passengers - exp(expo_pred$fit))^2, na.rm = T))
+rmse_expo # 43.14
+
+######################### Quadratic ####################################
+
+Quad_model <- lm(Passengers ~ t + t_square, data=train) #y = x^2+x
+summary(Quad_model)
+Quad_pred <- data.frame(predict(Quad_model, interval='predict', newdata=test))
+
+rmse_Quad <- sqrt(mean((test$Passengers - Quad_pred$fit)^2, na.rm=T))
+rmse_Quad # 42.14
+
+######################### Additive Seasonality #########################
+
+sea_add_model <- lm(Passengers ~ Jan+Feb+Mar+Apr+May+Jun+Jul+Aug+Sep+Oct+Nov, data=train) #add all months data
+summary(sea_add_model)
+
+sea_add_pred <- data.frame(predict(sea_add_model, newdata=test, interval='predict'))
+
+rmse_sea_add <- sqrt(mean((test$Passengers - sea_add_pred$fit)^2, na.rm = T))
+rmse_sea_add # 123.68
+
+######################## Multiplicative Seasonality #########################
+
+multi_sea_model <- lm(log_ff ~ Jan+Feb+Mar+Apr+May+Jun+Jul+Aug+Sep+Oct+Nov, data = train) #take log_ff as y
+summary(multi_sea_model)
+
+multi_sea_pred <- data.frame(predict(multi_sea_model, newdata=test, interval='predict'))
+
+rmse_multi_sea <- sqrt(mean((test$Passengers - exp(multi_sea_pred$fit))^2, na.rm = T))
+rmse_multi_sea # 128.069
+
+######################## Additive Seasonality with Linear trend #################
+
+Add_sea_Linear_model <- lm(Passengers ~ t+Jan+Feb+Mar+Apr+May+Jun+Jul+Aug+Sep+Oct+Nov,data=train) #Linear Trends means adding one-time component "t"
+summary(Add_sea_Linear_model)
+Add_sea_Linear_pred<-data.frame(predict(Add_sea_Linear_model,interval='predict',newdata=test))
+rmse_Add_sea_Linear<-sqrt(mean((test$Passengers-Add_sea_Linear_pred$fit)^2,na.rm=T))
+rmse_Add_sea_Linear # 33.01
+
+######################## Additive Seasonality with Quadratic Trend #################
+
+Add_sea_Quad_model<-lm(Passengers ~ t+t_square+Jan+Feb+Mar+Apr+May+Jun+Jul+Aug+Sep+Oct+Nov,data=train) #Adding one-time component "t" and square component "t_square"
+summary(Add_sea_Quad_model)
+
+Add_sea_Quad_pred<-data.frame(predict(Add_sea_Quad_model,interval='predict',newdata=test))
+rmse_Add_sea_Quad<-sqrt(mean((test$Passengers-Add_sea_Quad_pred$fit)^2,na.rm=T))
+rmse_Add_sea_Quad # 27.48
+
+######################## Multiplicative Seasonality Linear trend ##########################
+
+multi_add_sea_model<-lm(log_ff ~ t+Jan+Feb+Mar+Apr+May+Jun+Jul+Aug+Sep+Oct+Nov,data = train) #Adding one-time component "t" #Including logarithm
+summary(multi_add_sea_model) 
+
+multi_add_sea_pred<-data.frame(predict(multi_add_sea_model,newdata=test,interval='predict'))
+rmse_multi_add_sea<-sqrt(mean((test$Passengers-exp(multi_add_sea_pred$fit))^2,na.rm = T))
+rmse_multi_add_sea # 12.30
+
+###### Preparing table on model and it's RMSE values 
+
+table_rmse <- data.frame(c("rmse_linear","rmse_expo","rmse_Quad","rmse_sea_add","rmse_multi_sea","rmse_Add_sea_Quad","rmse_multi_add_sea"),c(rmse_linear,rmse_expo,rmse_Quad,rmse_sea_add,rmse_multi_sea,rmse_Add_sea_Quad,rmse_multi_add_sea))
+View(table_rmse)
+
+colnames(table_rmse) <-c ("model","RMSE")
+View(table_rmse)
+
+###Multiplicative Seasonality Linear trend has least RMSE value
+new_model<-lm(log_ff ~ t+Jan+Feb+Mar+Apr+May+Jun+Jul+Aug+Sep+Oct+Nov,data=trakdata)
+summary(new_model)
+
+resid <- residuals(new_model)
+resid[1:100]
+
+# Predict
+library(readr)
+new_data <- read_excel(file.choose())
+View(new_data)
+
+pred_new <- data.frame(predict(new_model, newdata=new_data, interval = 'predict'))
+View(pred_new)
+pred_new$fit
+#The log_ff = ln(airlines["Passengers"]
+#5.77 for Jan 2003.....The passengers will be ln^-1 = 320 passengers for Jan 2003....
+
+
+### ### ### Sales for Colacola ### ### ###
+
+library(readxl)
+colacola <- read_excel(file.choose()) 
+View(colacola)
+
+windows()
+plot(colacola$Sales, type="o")
+
+colacola["t"] <- 1:42 #create a new column "t" to represent the quarter
+View(colacola)
+
+colacola["t_square"] <- colacola["t"] * colacola["t"]
+colacola["log_sales"] <- log(colacola["Sales"])
+attach(colacola)
+
+# So creating 4 dummy variables
+X <- data.frame(outer(rep(.abb, length = 42), quarter.abb,"==") + 0 )# Creating dummies for 12 months
+
+Q1 <-  ifelse(grepl("Q1",colacola$Quarter),'1','0')
+Q2 <-  ifelse(grepl("Q2",colacola$Quarter),'1','0')
+Q3 <-  ifelse(grepl("Q3",colacola$Quarter),'1','0')
+Q4 <-  ifelse(grepl("Q4",colacola$Quarter),'1','0')
+
+CocacolaData<-cbind(colacola,Q1,Q2,Q3,Q4)
+View(CocacolaData)
+colnames(CocacolaData)
+attach(CocacolaData)
+
+# Partition the time series
+train <- CocacolaData[1:30, ]
+test <- CocacolaData[31:42, ]
+
+########################### LINEAR MODEL (Linear Regression) #############################
+linear_model <- lm(Sales ~ t, data=train)
+summary(linear_model)
+
+linear_pred <- data.frame(predict(linear_model,interval='predict', newdata =test)) #predict the future values by giving test data
+View(linear_pred)
+
+rmse_linear <- sqrt(mean((test$Sales - linear_pred$fit)^2, na.rm = T))
+rmse_linear # 714.01
+
+######################### Exponential #################################
+
+expo_model <- lm(log_sales ~ t, data=train)
+summary(expo_model)
+
+expo_pred <- data.frame(predict(expo_model, interval='predict', newdata=test))
+View(expo_pred)
+
+rmse_expo<-sqrt(mean((test$Sales - exp(expo_pred$fit))^2, na.rm = T))
+rmse_expo # 552.28
+
+######################### Quadratic ####################################
+
+Quad_model <- lm(Sales ~ t + t_square, data=train) #y = x^2+x
+summary(Quad_model)
+Quad_pred <- data.frame(predict(Quad_model, interval='predict', newdata=test))
+
+rmse_Quad <- sqrt(mean((test$Sales - Quad_pred$fit)^2, na.rm=T))
+rmse_Quad # 646.27
+
+######################### Additive Seasonality #########################
+
+sea_add_model <- lm(Sales ~ Q1+Q2+Q3+Q4, data=train) #add all quarter data
+summary(sea_add_model)
+
+sea_add_pred <- data.frame(predict(sea_add_model, newdata=test, interval='predict'))
+
+rmse_sea_add <- sqrt(mean((test$Sales - sea_add_pred$fit)^2, na.rm = T))
+rmse_sea_add # 1778.01
+
+######################## Multiplicative Seasonality #########################
+
+multi_sea_model <- lm(log_sales ~ Q1+Q2+Q3+Q4, data = train) #take log_sales as y
+summary(multi_sea_model)
+
+multi_sea_pred <- data.frame(predict(multi_sea_model, newdata=test, interval='predict'))
+
+rmse_multi_sea <- sqrt(mean((test$Sales - exp(multi_sea_pred$fit))^2, na.rm = T))
+rmse_multi_sea # 1828.92
+
+######################## Additive Seasonality with Linear trend #################
+
+Add_sea_Linear_model <- lm(Sales ~ t+Q1+Q2+Q3+Q4,data=train) #Linear Trends means adding one-time component "t"
+summary(Add_sea_Linear_model)
+Add_sea_Linear_pred<-data.frame(predict(Add_sea_Linear_model,interval='predict',newdata=test))
+rmse_Add_sea_Linear<-sqrt(mean((test$Sales-Add_sea_Linear_pred$fit)^2,na.rm=T))
+rmse_Add_sea_Linear # 637.94
+
+######################## Additive Seasonality with Quadratic Trend #################
+
+Add_sea_Quad_model<-lm(Sales ~ t+t_square+Q1+Q2+Q3+Q4,data=train) #Adding one-time component "t" and square component "t_square"
+summary(Add_sea_Quad_model)
+
+Add_sea_Quad_pred<-data.frame(predict(Add_sea_Quad_model,interval='predict',newdata=test))
+rmse_Add_sea_Quad<-sqrt(mean((test$Sales-Add_sea_Quad_pred$fit)^2,na.rm=T))
+rmse_Add_sea_Quad # 586.05
+
+######################## Multiplicative Seasonality Linear trend ##########################
+
+multi_add_sea_model<-lm(log_sales ~ t+Q1+Q2+Q3+Q4,data = train) #Adding one-time component "t" #Including logarithm
+summary(multi_add_sea_model) 
+
+multi_add_sea_pred<-data.frame(predict(multi_add_sea_model,newdata=test,interval='predict'))
+rmse_multi_add_sea<-sqrt(mean((test$Sales-exp(multi_add_sea_pred$fit))^2,na.rm = T))
+rmse_multi_add_sea # 410.24
+
+###### Preparing table on model and it's RMSE values 
+table_rmse <- data.frame(c("rmse_linear","rmse_expo","rmse_Quad","rmse_sea_add","rmse_multi_sea","rmse_Add_sea_Quad","rmse_multi_add_sea"),c(rmse_linear,rmse_expo,rmse_Quad,rmse_sea_add,rmse_multi_sea,rmse_Add_sea_Quad,rmse_multi_add_sea))
+View(table_rmse)
+
+colnames(table_rmse) <-c ("model","RMSE")
+View(table_rmse)
+
+###Multiplicative Seasonality Linear trend has least RMSE value
+new_model<-lm(log_sales ~ t+Q1+Q2+Q3+Q4,data = CocacolaData)
+summary(new_model)
+
+resid <- residuals(new_model)
+resid[1:42]
+
+# Predict
+library(readxl)
+new_data <- read_excel(file.choose())
+View(new_data)
+
+new_data$Q1 <- factor(new_data$Q1)
+new_data$Q2 <- factor(new_data$Q2)
+new_data$Q3 <- factor(new_data$Q3)
+new_data$Q4 <- factor(new_data$Q4)
+
+pred_new <- data.frame(predict(new_model, newdata=new_data, interval = 'predict')) #predict the footfalls for the future
+View(pred_new)
+pred_new$fit
+
+#log_sales for Q3_96 is 8.538, then the sales will be ln^-1 (8.538) = 5105.12
+#log_sales for Q4_96 is 8.4579, then the sales will be ln^-1 (8.4579) = 4712.15
+
+
+
