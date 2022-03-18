@@ -1,0 +1,66 @@
+Prepare Association Rules for the dataset 
+
+###Transaction Details###
+install.packages("arules")
+install.packages("arulesViz")
+
+library("arules")
+library(arulesViz)
+
+transaction_retail <- read.csv(file.choose())
+
+rules <- apriori(transaction_retail, parameter = list(support = 0.003, confidence = 0.3, minlen = 2)) #form Association rule #support is 0.003 (can be changed based on preference), confidence is 0.3 (30%) (can be changed based on preference), minlen is 2 (2 items are used together) (can be changed based on our preference)
+
+inspect(rules[1:5]) #inspect first 5 rules out of 410 rules
+
+windows() 
+plot(rules, method = "scatterplot")
+plot(rules, method = "grouped")
+
+rules <- sort(rules,by="lift") #sort the items by lift
+
+inspect(rules[1:5]) #inspect the first 5 rules (From the highest life to lowest)
+
+###Book###
+install.packages("arules")
+install.packages("arulesViz")
+
+library("arules")
+library(arulesViz)
+
+book <- read.csv(file.choose())
+
+summary(book)
+
+rules <- apriori(book, parameter = list(support = 0.003, confidence = 0.3, minlen = 3)) #form Association rule #support is 0.003 (can be changed based on preference), confidence is 0.3 (30%) (can be changed based on preference), minlen is 2 (2 items are used together) (can be changed based on our preference)
+
+inspect(rules[1:5]) #inspect the first 5 rules out of 11242 rules
+
+windows() 
+plot(rules, method = "scatterplot")
+plot(rules, method = "grouped")
+
+rules <- sort(rules,by="lift") #sort the items by lift
+
+inspect(rules[1:5]) #inspect the first 5 rules (From the highest life to lowest)
+
+###Movies###
+install.packages("arules")
+install.packages("arulesViz")
+
+library("arules")
+library(arulesViz)
+
+my_movies <- read.csv(file.choose())
+
+rules <- apriori(my_movies, parameter = list(support = 0.003, confidence = 0.3, minlen = 2)) #form Association rule #support is 0.003 (can be changed based on preference), confidence is 0.3 (30%) (can be changed based on preference), minlen is 2 (2 items are used together) (can be changed based on our preference)
+
+inspect(rules[1:5]) #inspect first 5 rules out of 1153840 rules
+
+windows() 
+plot(rules, method = "scatterplot")
+plot(rules, method = "grouped")
+
+rules <- sort(rules,by="lift") #sort the items by lift
+
+inspect(rules[1:5]) #inspect the first 5 rules (From the highest life to lowest)
