@@ -1,0 +1,32 @@
+# Data(Train)
+train_sal <- read.csv(file.choose(),stringsAsFactors = TRUE )
+
+View(train_sal)
+summary(train_sal)
+
+# Data(Test)
+test_sal <- read.csv(file.choose(),stringsAsFactors = TRUE )
+
+View(test_sal)
+summary(test_sal)
+
+# Training a model on the data ----
+install.packages("kernlab") #used for SVM
+library(kernlab)
+salary_classifier <- ksvm(train_sal$Salary ~ ., data = train_sal, kernel = "vanilladot") 
+
+## Evaluating model performance ----
+# predictions on testing dataset
+Salary_predictions <- predict(salary_classifier, test_sal)
+
+table(Salary_predictions, test_sal$Salary)
+agreement <- Salary_predictions == test_sal$Salary
+table(agreement)
+prop.table(table(agreement))
+
+#by changing the type of kernels
+salary_classifier_rbf <- ksvm(train_sal$Salary ~ ., data = train_sal, kernel = "rbfdot") 
+Salary_predictions_rbf <- predict(salary_classifier_rbf, test_sal)
+agreement_rbf <- Salary_predictions_rbf == test_sal$Salary
+table(agreement_rbf)
+prop.table(table(agreement_rbf))
