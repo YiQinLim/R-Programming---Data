@@ -1,0 +1,133 @@
+###Text Mining for Apple Watch Reviews on Amazon###
+
+library(rvest)
+library(XML)
+library(magrittr)
+
+######### Apple watch Reviews ###########
+
+aurl <-"https://www.amazon.com/Apple-Watch-Midnight-Aluminum-Sport/product-reviews/B09HF6XBPF/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews"
+
+reviews <- NULL #create a NULL variable #line13-line22 are standard codes, just follow every time
+
+for (i in 1:20){ #20 pages for reviews are selected
+  watch <- read_html(as.character(paste(aurl,i,sep ="=")))
+  rev <- watch %>% html_nodes(".review-text") %>% html_text()
+  reviews <- c(reviews,rev)
+}
+
+write.table(reviews,"watch.txt")
+getwd()
+
+##################################
+
+txt <- reviews
+
+str(txt) #structure
+length(txt) #length of the txt #200 reviews
+
+# Corpus
+install.packages("tm")
+library(tm)
+
+x <- Corpus(VectorSource(txt)) #convert into Corpus 
+
+inspect(x[1]) #inspect first review
+inspect(x[160])
+
+x <- tm_map(x, function(x) iconv(enc2utf8(x), sub='byte'))
+?tm_map
+
+# Data Cleansing #we clean the data for all reviews, but only inspect one in this case
+x1 <- tm_map(x, tolower) #low case
+inspect(x1[1])
+
+x1 <- tm_map(x1, removePunctuation) #remove punctuation
+inspect(x1[1])
+
+#inspect(x1[5])
+x1 <- tm_map(x1, removeNumbers) #remove numbers
+inspect(x1[1])
+
+x1 <- tm_map(x1, removeWords, stopwords('english')) #remove stopwords
+inspect(x1[1])
+inspect(x1[3])
+
+# striping white spaces 
+x1 <- tm_map(x1, stripWhitespace) #remove white spaces
+inspect(x1[1])
+
+# Term document matrix 
+# converting unstructured data to structured format using TDM
+
+tdm <- TermDocumentMatrix(x1)
+tdm
+dtm <- t(tdm) # transpose of tdm
+dtm <- DocumentTermMatrix(x1) 
+
+tdm <- as.matrix(tdm) #convert into as.matrix
+dim(tdm)
+
+tdm[1:20, 1:20]
+
+inspect(x1[3])
+
+w <- rowSums(tdm)
+w
+
+w_sub <- subset(w, w >= 65) #repeated frequency of word in the reviews >65 times
+w_sub
+
+barplot(w_sub, las=1, col = rainbow(30)) 
+
+x1 <- tm_map(x1, removeWords, c('tried'))
+x1 <- tm_map(x1, removeWords, c("it's"))
+
+x1 <- tm_map(x1, stripWhitespace) #remove white spaces
+
+tdm <- TermDocumentMatrix(x1) #form the document matrix
+tdm       
+
+tdm <- as.matrix(tdm) #convert into as.matrix
+tdm[100:109, 1:20]     
+
+w <- rowSums(tdm) #count how many rows
+w
+
+w_sub <- subset(w, w >= 50) #repeated frequency of word in the reviews >50 times
+w_sub
+sort(w_sub) #sort them
+
+barplot(w_sub, las=2, col = rainbow(30))
+
+##### Word cloud #####
+install.packages("wordcloud") 
+library(wordcloud)
+
+wordcloud(words = names(w_sub), freq = w_sub)
+
+w_sub1 <- sort(rowSums(tdm), decreasing = TRUE) #sort them
+head(w_sub1)
+
+wordcloud(words = names(w_sub1), freq = w_sub1) # all words are considered
+
+# better visualization
+windows() 
+wordcloud(words = names(w_sub1), freq = w_sub1, random.order=F,colors=rainbow(30),scale=c(2,0.5),rot.per=0.4)
+windows() #pop-up window #not giving the random order, as it is False (F)
+wordcloud(words = names(w_sub1), freq = w_sub1, random.order=F,colors= rainbow(30),scale=c(3,0.5),rot.per=0.3) #run line120 and line121
+?wordcloud
+
+############# Wordcloud2 ############### (wordcloud2 is advanced version)
+installed.packages("wordcloud2")
+library(wordcloud2)
+
+w1 <- data.frame(names(w_sub), w_sub) #convert into data frame
+colnames(w1) <- c('word', 'freq') #rename into word and frequency
+?wordcloud2
+
+wordcloud2(w1, size=0.4, shape='circle') #circle shape
+
+wordcloud2(w1, size=0.3, shape = 'triangle') #triangle shape
+
+############
