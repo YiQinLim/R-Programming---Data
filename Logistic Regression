@@ -1,0 +1,64 @@
+### Logistic Regression for Affair ###
+# Load the Dataset
+install.packages("writexl")
+install.packages('AER')
+library("writexl")
+library(readr)
+library('fastDummies')
+
+data(Affairs,package="AER")
+#save the data into csv file (saved in the download)
+write.csv(Affairs,"C:\\Users\\limti\\Downloads\\Affairs.csv", row.names = FALSE)
+
+#create dummy variables
+dataf <- dummy_cols(Affairs, select_columns = c('gender','children'))
+
+#Removing the categorical columns
+dataf.2 <- dummy_cols(dataf, select_columns = c('gender','children'),
+                      remove_selected_columns = TRUE)
+
+#combining the results children_no and children_yes into children
+dataf.2$children<- ifelse(dataf.2$children_yes==1, 1, ifelse(dataf.2$children_yes==0, 0, NA))
+
+#remove the dummy variables for children_no and children_yes
+dataf.2$children_no <- NULL
+dataf.2$children_yes <- NULL
+
+# create normalization function
+normalize <- function(x) { #create a user defined function for normalization, so every time you call out normalize, it will perform x-min(x)/max(x)-min(x)
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# normalize the data
+dataf.2n <- as.data.frame(lapply(dataf.2[1:10], normalize))
+
+Affairs_train <- dataf.2n[1:430, ]
+Affairs_test <- dataf.2n[431:601, ]
+
+model <- glm(affairs~., data = Affairs_train, family = "binomial")
+summary(model)
+
+# Prediction on Test data
+prob_test <- predict(model, Affairs_test, type="response")
+prob_test
+
+# Confusion matrix and considering the threshold value as 0.5 
+confusion_test <- table(prob_test>0.5, Affairs_test $affairs)
+confusion_test
+
+# Model Accuracy 
+Accuracy_test <- sum(diag(confusion_test)) / sum(confusion_test) #diag means diagonal
+Accuracy_test
+
+# Prediction on Train data 
+prob_train <- predict(model, Affairs_train, type="response")
+
+# Confusion matrix and considering the threshold value as 0.5 
+confusion_train <- table(prob_train > 0.5, Affairs_train$affairs)
+confusion_train
+
+# Model Accuracy 
+Accuracy_train <- sum(diag(confusion_train)) / sum(confusion_train)
+Accuracy_train
+error_train<-1-Accuracy_train
+error_train
