@@ -1,0 +1,28 @@
+### Perform Clustering for the crime data and identify the number of clusters formed and draw inferences.
+
+# Load the dataset
+library(data.table) #to run setnames
+crime_data <- read_csv(file.choose())
+mydata <- crime_data [, c(2:5)] #remove 1st column
+
+# Normalize the data 
+normalized_data <- scale(mydata[, 1:4])
+
+d <- dist(normalized_data, method = "euclidean")
+fit <- hclust(d, method = "complete")
+
+plot(fit) 
+plot(fit, hang = -1) 
+
+groups <- cutree(fit, k = 4)
+rect.hclust(fit, k = 4, border = "red") 
+
+ID <- as.matrix(groups)
+
+final <- data.frame(ID, mydata)
+
+aggregate(mydata[,1:4], by=list(final$ID), FUN = mean) 
+
+library(readr)
+write_csv(final, "crime.csv")
+getwd()
