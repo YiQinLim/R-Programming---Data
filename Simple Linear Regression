@@ -1,0 +1,98 @@
+### Calories Consumed ###
+# Load the dataset
+
+library(readr)
+cal <- read.csv(file.choose())
+attach(cal) #so that we can directly refer to the variable names
+colnames(cal)<-c("weight_gained","calories_consumed")
+View(cal)
+summary(cal) #to show the mean, median, first quartile, min, max values
+
+attach(cal)
+plot(calories_consumed, weight_gained) #scatter plot (x-axis, y-axis)
+cor(calories_consumed, weight_gained) #(strong positive correlation is >0.85)
+
+model <- lm(weight_gained ~ calories_consumed) #lm(output ~ input)
+model ##beta0 is intercept, and beta1 is calories_consumed
+summary (model)# output and evaluating
+
+# Evaluating Error #root mean square error is used
+rmse1 <- sqrt(mean(model$residuals^2))
+rmse1 #error = 103.3025
+
+######### Model building on Transformed Data ######
+
+### Log Transformation
+# Transform the data, as it is not in linear regression (error is big, 103.3025)
+plot(log(calories_consumed), weight_gained)
+cor(calories_consumed, weight_gained) #(strong positive correlation is >0.85)
+
+model2 <- lm(weight_gained ~ log(calories_consumed))
+summary(model2)
+rmse2 <- sqrt(mean(model2$residuals^2))
+rmse2 #error = 141.00
+
+### Exponential transformation
+plot(calories_consumed, log(weight_gained))
+cor(calories_consumed, log(weight_gained)) #(strong positive correlation is >0.85)
+
+model3 <- lm(log(weight_gained) ~ calories_consumed) #lm(output~input)
+summary(model3)
+model3$residuals
+
+log_weight_gained <- predict(model3) #prediction
+log_weight_gained
+
+weight_gained <- exp(log_weight_gained)
+err <- cal$weight_gained-weight_gained #(actual value - predicted value)
+
+rmse3 <- sqrt(mean(err^2))
+rmse3 #error = 118.0452
+
+### Polynomial transformation
+model4 <- lm(log(weight_gained) ~ calories_consumed + I(calories_consumed * calories_consumed))
+summary(model4)
+
+confint(model4,level=0.95)
+
+log_res <- predict(model4)
+weight_gainedpoly <- exp(log_res)
+weight_gainedpoly
+err_poly<- cal$weight_gained - weight_gainedpoly
+err_poly
+
+rmse4 <- sqrt(mean(err_poly^2))
+rmse4 #error = 118.0452
+
+# Comparing all the models using train error and test error
+table_rmse <- data.frame(c("SLR","Log model","Exp model","Poly model"),c(rmse1, rmse2, rmse3, rmse4))
+colnames(table_rmse) <- c("Model", "RMSE") #giving the column names
+table_rmse #SLR is having the least error, error = 103.3025
+
+# Partition the data into train and test
+train <- cal[1:10, ]
+test <- cal[11:14, ]
+
+# Evaluation of the Best Model
+finalmodel <- lm((weight_gained ~ calories_consumed),data = train)
+summary(finalmodel)
+
+# Prediction on test data
+test_SLR <- predict(finalmodel, newdata=test)
+test_res <- (test_SLR )
+test_res
+
+test_error <- test$weight_gained - test_res #actual - predicted
+test_error
+
+# RMSE on test data
+test_rmse <- sqrt(mean(test_error^2))
+test_rmse
+
+# RMSE on train data
+train_error <- exp(finalmodel$residuals) #no need to find out residuals again, as while building the model, residual is already calculated
+train_error
+
+train_rmse <- sqrt(mean(train_error^2))
+train_rmse
+
