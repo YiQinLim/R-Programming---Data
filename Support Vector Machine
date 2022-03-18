@@ -1,3 +1,4 @@
+###Prepare a classification model using SVM for salary data.
 # Data(Train)
 train_sal <- read.csv(file.choose(),stringsAsFactors = TRUE )
 
