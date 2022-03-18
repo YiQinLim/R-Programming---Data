@@ -1,0 +1,60 @@
+#Decision Tree for a company's data#
+
+library(readr)
+company <- read.csv(file.choose(),stringsAsFactors = TRUE)
+str(company)
+
+# converting Sales to a factor
+company$Sales<- cut(company$Sales, 3, labels=c('High', 'Medium', 'Low'))
+View(company)
+
+# table or proportions with more informative labels
+round(prop.table(table(company$Sales)) * 100, digits = 2) #round off decimal places #get the percentage of diagnosis
+
+summary(company)
+
+# look at the class variable
+table(company$Sales)
+
+# Shuffle the data
+company_rand <- company[order(runif(400)), ] #shuffling the data
+str(company_rand)
+
+# split the data frames
+company_train <- company_rand[1:300, ]
+company_test  <- company_rand[301:400, ] 
+
+# check the proportion of class variable #check the percentage of YES and NO
+prop.table(table(company_rand$Sales))
+prop.table(table(company_train$Sales))
+prop.table(table(company_test$Sales))
+
+# Step 3: Training a model on the data
+install.packages("C50")
+library(C50) #this library is used for decision tree
+
+#building the decision tree model
+company_model <- C5.0(company_train [,-1], company_train$Sales)
+
+#run line 39 and line 40 together
+windows()
+plot(company_model)
+
+# Display detailed information about the tree
+summary(company_model)
+
+# Step 4: Evaluating model performance
+# Test data accuracy
+test_res <- predict(company_model, company_test)
+test_acc <- mean(company_test$Sales == test_res)
+test_acc
+
+# cross tabulation of predicted versus actual classes
+library(gmodels) #crosstable is available in gmodels
+CrossTable(company_test$Sales, test_res, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual default', 'predicted default'))
+
+# On Training Dataset
+train_res <- predict(company_model, company_train)
+train_acc <- mean(company_train$Sales == train_res)
+train_acc
