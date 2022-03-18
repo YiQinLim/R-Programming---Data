@@ -1,0 +1,58 @@
+###Profit for a Start Up Company###
+library(readr)
+library('fastDummies')
+Startup <- read.csv(file.choose())
+attach(Startup)
+
+colnames(Startup)<-c("RD", "Admin", "Marketing", "State", "Profit")
+
+#create dummy variables
+dataf <- dummy_cols(Startup, select_columns = 'State') #dummy variable for one column
+
+#Removing the categorical columns
+latestdata <-dataf[-c(4)]
+
+attach(latestdata)
+summary(latestdata)
+
+plot(RD,Profit)
+plot(Admin,Profit)
+plot(Marketing,Profit)
+plot(RD,Profit)
+plot(State_California,Profit)
+plot(State_Florida, Profit)
+
+
+pairs(latestdata) # In this plot we are plotting dummy which seems no relative
+
+
+#Removing the dummy variable columns
+finaldata <- latestdata[ -c(5:7) ]
+
+pairs(finaldata)
+cor(finaldata)
+
+model <- lm(Profit ~ RD + Admin + Marketing)
+summary(model)
+
+vif(model) #ADmin value has the biggest difference with others, remove admin
+
+model2 <- lm(Profit ~ RD +  Marketing)
+vif(model2) #both have equal VIF values, good !
+
+train <- finaldata[1:35, ]
+test <- finaldata[36:50, ]
+
+model <- lm(Profit ~ RD +  Marketing, data = train)
+summary(model)
+
+pred <-  predict(model2, newdata=test)
+actual <-  test$Profit
+error <-  actual - pred
+error
+
+test.rmse <-  sqrt(mean(error**2))
+test.rmse
+
+train.rmse <-  sqrt(mean(model$residuals**2))
+train.rmse
